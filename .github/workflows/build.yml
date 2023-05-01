@@ -1,10 +1,10 @@
 name: Build FFmpeg
 
 on:
-  push:
-    paths-ignore:
-      - '**.md'
-      - 'LICENSE'
+#   push:
+#     paths-ignore:
+#       - '**.md'
+#       - 'LICENSE'
   workflow_dispatch:
     inputs:
       doRelease:
@@ -12,11 +12,11 @@ on:
         type: boolean
         default: false
         required: false
-      buildOnly:
-        description: 'Only build ffmpeg'
-        type: boolean
-        default: false
-        required: false
+      # buildOnly:
+      #   description: 'Only build ffmpeg'
+      #   type: boolean
+      #   default: false
+      #   required: false
 #   schedule:
 #     - cron: '0 12 * * *'
 
@@ -128,8 +128,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [win64,linux64,linuxarm64]
-        variant: [gpl,lgpl,gpl 4.4,gpl 5.1,gpl 6.0,lgpl 4.4,lgpl 5.1,lgpl 6.0,gpl-shared,lgpl-shared,gpl-shared 4.4,gpl-shared 5.1,gpl-shared 6.0,lgpl-shared 4.4,lgpl-shared 5.1,lgpl-shared 6.0]
+#       target: [win64,linux64,linuxarm64]
+#       variant: [gpl,lgpl,gpl 4.4,gpl 5.1,gpl 6.0,lgpl 4.4,lgpl 5.1,lgpl 6.0,gpl-shared,lgpl-shared,gpl-shared 4.4,gpl-shared 5.1,gpl-shared 6.0,lgpl-shared 4.4,lgpl-shared 5.1,lgpl-shared 6.0]
+        target: [win64,linux64]
+        variant: [gpl 6.0,nonfree 6.0]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -184,8 +186,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [win64,linux64,linuxarm64]
-        variant: [gpl,lgpl,gpl 4.4,gpl 5.1,gpl 6.0,lgpl 4.4,lgpl 5.1,lgpl 6.0,gpl-shared,lgpl-shared,gpl-shared 4.4,gpl-shared 5.1,gpl-shared 6.0,lgpl-shared 4.4,lgpl-shared 5.1,lgpl-shared 6.0]
+#       target: [win64,linux64,linuxarm64]
+#       variant: [gpl,lgpl,gpl 4.4,gpl 5.1,gpl 6.0,lgpl 4.4,lgpl 5.1,lgpl 6.0,gpl-shared,lgpl-shared,gpl-shared 4.4,gpl-shared 5.1,gpl-shared 6.0,lgpl-shared 4.4,lgpl-shared 5.1,lgpl-shared 6.0]
+        target: [win64,linux64]
+        variant: [gpl 6.0,nonfree 6.0]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -223,32 +227,32 @@ jobs:
           set -xe
           shopt -s nullglob
           RELDATE="$(date +'%Y-%m-%d %H:%M')"
-          NAME="Auto-Build $RELDATE"
-          TAGNAME="autobuild-$(date +'%Y-%m-%d-%H-%M')"
+          NAME="Build $RELDATE"
+          TAGNAME="build-$(date +'%Y-%m-%d-%H-%M')"
           hub release create $(for a in artifacts/*.{zip,tar.xz}; do echo -a $a; done) -m "$NAME" -t "master" "$TAGNAME"
           echo "tag_name=${TAGNAME}" >> $GITHUB_OUTPUT
           echo "rel_date=${RELDATE}" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - name: Update Latest
-        run: |
-          set -xe
-          shopt -s nullglob
-          mkdir latest_artifacts
-          ./util/repack_latest.sh latest_artifacts artifacts/*.{zip,tar.xz}
-          NAME="Latest Auto-Build (${{ steps.create_release.outputs.rel_date }})"
-          TAGNAME="latest"
-          hub release delete "$TAGNAME" || true
-          git push --delete origin "$TAGNAME" || true
-          sleep 15
-          hub release create $(for a in latest_artifacts/*; do echo -a $a; done) -m "$NAME" -t "master" "$TAGNAME"
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Update Wiki
-        run: ./util/update_wiki.sh artifacts ${{ steps.create_release.outputs.tag_name }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Prune old releases
-        run: ./util/prunetags.sh
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+#       - name: Update Latest
+#         run: |
+#           set -xe
+#           shopt -s nullglob
+#           mkdir latest_artifacts
+#           ./util/repack_latest.sh latest_artifacts artifacts/*.{zip,tar.xz}
+#           NAME="Latest Auto-Build (${{ steps.create_release.outputs.rel_date }})"
+#           TAGNAME="latest"
+#           hub release delete "$TAGNAME" || true
+#           git push --delete origin "$TAGNAME" || true
+#           sleep 15
+#           hub release create $(for a in latest_artifacts/*; do echo -a $a; done) -m "$NAME" -t "master" "$TAGNAME"
+#         env:
+#           GITHUB_TOKEN: ${{ github.token }}
+#       - name: Update Wiki
+#         run: ./util/update_wiki.sh artifacts ${{ steps.create_release.outputs.tag_name }}
+#         env:
+#           GITHUB_TOKEN: ${{ github.token }}
+#       - name: Prune old releases
+#         run: ./util/prunetags.sh
+#         env:
+#           GITHUB_TOKEN: ${{ github.token }}
